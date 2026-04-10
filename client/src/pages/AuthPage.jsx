@@ -1,25 +1,50 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react';
 
 export default function AuthPage({ onAuth }) {
-  const [mode, setMode]       = useState('login')
-  const [name, setName]       = useState('')
-  const [email, setEmail]     = useState('')
-  const [password, setPass]   = useState('')
-  const [error, setError]     = useState('')
-  const [loading, setLoading] = useState(false)
+  const [mode, setMode] = useState('login');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPass] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showGenerated, setShowGenerated] = useState(false);
 
-  const validate = () => {
-    if (mode === 'register' && !name.trim()) return 'Full name is required.'
-    if (!email.includes('@')) return 'Enter a valid email address.'
-    if (password.length < 6) return 'Password must be at least 6 characters.'
-    return null
+  // Auto-generate strong password when user is in register mode and types name or email
+  useEffect(() => {
+    if (mode === 'register' && (name.trim() || email.trim())) {
+      if (!password || password.length < 8) {   // Only generate if field is empty or too short
+        const newPassword = generateStrongPassword();
+        setPass(newPassword);
+        setShowGenerated(true);
+      }
+    } else {
+      setShowGenerated(false);
+    }
+  }, [mode, name, email]);   // Trigger when name or email changes
+
+  function generateStrongPassword(length = 16) {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+";
+    let pass = "";
+    for (let i = 0; i < length; i++) {
+      pass += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return pass;
   }
 
+  const validate = () => {
+    if (mode === 'register' && !name.trim()) return 'Full name is required.';
+    if (!email.includes('@')) return 'Enter a valid email address.';
+    if (password.length < 6) return 'Password must be at least 6 characters.';
+    return null;
+  };
+
   const submit = async () => {
-    const err = validate()
-    if (err) { setError(err); return }
-    setError('')
-    setLoading(true)
+    const err = validate();
+    if (err) { setError(err); return; }
+
+    setError('');
+    setLoading(true);
+
     try {
       const res = await fetch(mode === 'login' ? '/api/auth/login' : '/api/auth/register', {
         method: 'POST',
@@ -29,35 +54,39 @@ export default function AuthPage({ onAuth }) {
             ? { email: email.trim().toLowerCase(), password }
             : { name: name.trim(), email: email.trim().toLowerCase(), password }
         ),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Something went wrong.')
-      localStorage.setItem('s_token', data.token)
-      localStorage.setItem('s_user', JSON.stringify(data.user))
-      onAuth(data.user, data.token)
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+
+      localStorage.setItem('s_token', data.token);
+      localStorage.setItem('s_user', JSON.stringify(data.user));
+      onAuth(data.user, data.token);
+
     } catch (e) {
-      setError(e.message)
+      setError(e.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const loadDemo = () => {
-    setEmail('demo@sentinel.ai')
-    setPass('demo123')
-    setName('Demo Agent')
-    setError('')
-  }
+    setMode('login');
+    setEmail('demo@sentinel.ai');
+    setPass('demo123');
+    setName('Demo Agent');
+    setError('');
+    setShowGenerated(false);
+  };
 
   return (
     <div className="full-page">
-      {/* Corner brackets */}
+      {/* Your existing corner brackets and brand section remain the same */}
       <div style={{ position: 'fixed', top: 22, left: 22, width: 30, height: 30, borderTop: '1px solid rgba(0,255,136,0.2)', borderLeft: '1px solid rgba(0,255,136,0.2)' }} />
       <div style={{ position: 'fixed', top: 22, right: 22, width: 30, height: 30, borderTop: '1px solid rgba(0,255,136,0.2)', borderRight: '1px solid rgba(0,255,136,0.2)' }} />
       <div style={{ position: 'fixed', bottom: 22, left: 22, width: 30, height: 30, borderBottom: '1px solid rgba(0,255,136,0.2)', borderLeft: '1px solid rgba(0,255,136,0.2)' }} />
       <div style={{ position: 'fixed', bottom: 22, right: 22, width: 30, height: 30, borderBottom: '1px solid rgba(0,255,136,0.2)', borderRight: '1px solid rgba(0,255,136,0.2)' }} />
 
-      {/* Brand */}
       <div className="anim-up" style={{ textAlign: 'center', marginBottom: 44 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, marginBottom: 18 }}>
           <div className="dot dot-green" />
@@ -78,21 +107,18 @@ export default function AuthPage({ onAuth }) {
         </p>
       </div>
 
-      {/* Auth Card */}
       <div className="card anim-up-1" style={{ width: '100%', maxWidth: 400, padding: 28 }}>
-        {/* Mode toggle */}
         <div className="tabs" style={{ marginBottom: 24 }}>
           <button className={`tab-item ${mode === 'login' ? 'active' : ''}`}
-            onClick={() => { setMode('login'); setError('') }}>
+            onClick={() => { setMode('login'); setError(''); setShowGenerated(false); setPass(''); }}>
             Sign In
           </button>
           <button className={`tab-item ${mode === 'register' ? 'active' : ''}`}
-            onClick={() => { setMode('register'); setError('') }}>
+            onClick={() => { setMode('register'); setError(''); setShowGenerated(false); }}>
             Create Account
           </button>
         </div>
 
-        {/* Fields */}
         {mode === 'register' && (
           <div style={{ marginBottom: 14 }}>
             <label className="label">Full Name</label>
@@ -110,10 +136,31 @@ export default function AuthPage({ onAuth }) {
         <div style={{ marginBottom: 20 }}>
           <label className="label">Password</label>
           <input className="input" type="password"
-            placeholder={mode === 'register' ? 'Min. 6 characters' : '••••••••'}
-            value={password} onChange={e => setPass(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && submit()} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
+            placeholder="Strong password will appear automatically"
+            value={password} 
+            onChange={e => setPass(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && submit()} 
+            autoComplete="new-password" />
         </div>
+
+        {/* Auto-generated password display */}
+        {showGenerated && mode === 'register' && password && (
+          <div style={{ 
+            marginBottom: 16, 
+            padding: 12, 
+            background: 'rgba(0, 255, 136, 0.08)', 
+            border: '1px solid rgba(0,255,136,0.4)', 
+            borderRadius: 8 
+          }}>
+            <div style={{ color: 'var(--green)', fontSize: 13, marginBottom: 6 }}>
+              ✅ Strong password auto-generated for you:
+            </div>
+            <div style={{ fontFamily: 'monospace', fontSize: 15, color: '#fff', wordBreak: 'break-all' }}>
+              {password}
+            </div>
+            <small style={{ color: 'var(--text-2)' }}>You can edit it or use as-is.</small>
+          </div>
+        )}
 
         {error && (
           <div className="form-error" style={{ marginBottom: 14 }}>
@@ -122,10 +169,7 @@ export default function AuthPage({ onAuth }) {
         )}
 
         <button className="btn-primary" onClick={submit} disabled={loading}>
-          {loading
-            ? <><div className="spinner" style={{ color: '#02040a' }} /> Processing...</>
-            : mode === 'login' ? '→ Access Sentinel' : '→ Create Account'
-          }
+          {loading ? <>Processing...</> : mode === 'login' ? '→ Access Sentinel' : '→ Create Account'}
         </button>
 
         <div className="divider">
@@ -137,19 +181,14 @@ export default function AuthPage({ onAuth }) {
         </button>
       </div>
 
-      {/* Footer badges */}
       <div className="anim-up-2" style={{ display: 'flex', gap: 8, marginTop: 20, flexWrap: 'wrap', justifyContent: 'center' }}>
         {['3-Agent Pipeline', 'JWT Secured', 'Mission History', 'Free AI Tier'].map(t => (
           <span key={t} className="chip chip-dim">{t}</span>
         ))}
       </div>
     </div>
-  )
+  );
 }
-
-
-
-
 
 
 
