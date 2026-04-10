@@ -652,7 +652,25 @@ const uploadDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
 // ── 4. MIDDLEWARE ASSEMBLY ──
-app.use(cors({ origin: "*" }));
+// app.use(cors({ origin: "*" }));
+
+  // --- 4. MIDDLEWARE ASSEMBLY ---
+// This specific configuration forces the server to accept your local machine
+// --- 4. MIDDLEWARE ASSEMBLY ---
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
+// Add this line immediately after app.use(cors...)
+app.options('*', cors());
+
+app.use(express.json({ limit: "20mb" }));
+app.use(express.urlencoded({ extended: true, limit: "20mb" }));
+
+
+
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true, limit: "20mb" }));
 const upload = multer({ dest: uploadDir });
@@ -798,22 +816,39 @@ app.post("/api/run-pipeline", authMiddleware, upload.single("document"), async (
 // start();
 
 // --- 8. SYSTEM IGNITION ---
-const PORT = process.env.PORT || 3001;
+// const PORT = process.env.PORT || 3001;
+// async function start() {
+//   try {
+//     // Railway uses these specific env names for its MySQL plugin
+//     await initDB(); 
+//     console.log("✓ SENTINEL VAULT: Synchronization Complete.");
+//   } catch (dbErr) {
+//     console.warn("⚠ VAULT OFFLINE: Running in Stateless Mode.");
+//   }
+
+//   // CRITICAL: Must bind to 0.0.0.0 for Railway/Cloud deployment
+//   app.listen(PORT, '0.0.0.0', () => {
+//     console.log(`\n🏛️  SENTINEL FACTORY v2.0 ONLINE`);
+//     console.log(`📡 URL: http://0.0.0.0:${PORT}`);
+//     console.log(`🔐 AUTH: JWT ENABLED | DB: MYSQL\n`);
+//   });
+// }
+
+// start();
+
 async function start() {
   try {
-    // Railway uses these specific env names for its MySQL plugin
+    // Attempt DB connection but don't crash if it fails
     await initDB(); 
     console.log("✓ SENTINEL VAULT: Synchronization Complete.");
   } catch (dbErr) {
-    console.warn("⚠ VAULT OFFLINE: Running in Stateless Mode.");
+    console.warn("⚠ VAULT OFFLINE: Running in Stateless Mode (Demo will still work).");
   }
 
-  // CRITICAL: Must bind to 0.0.0.0 for Railway/Cloud deployment
+  // CRITICAL: Bind to 0.0.0.0 and Port for Render
+  const PORT = process.env.PORT || 3001;
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`\n🏛️  SENTINEL FACTORY v2.0 ONLINE`);
-    console.log(`📡 URL: http://0.0.0.0:${PORT}`);
-    console.log(`🔐 AUTH: JWT ENABLED | DB: MYSQL\n`);
+    console.log(`\n🏛️  SENTINEL FACTORY ONLINE: Port ${PORT}`);
   });
 }
-
 start();

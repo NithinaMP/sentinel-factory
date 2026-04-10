@@ -338,6 +338,43 @@ export default function App() {
     }
   }, [addLog])
 
+  // const handleStart = async ({ type, text, file, personality }) => {
+  //   setStage('running')
+  //   setLogs([]); setResult(null); setErrMsg('')
+  //   setAttempts(1); setProgress(2); setPhase(null)
+  //   setPersona(personality)
+
+  //   const fd = new FormData()
+  //   fd.append('personality', personality)
+  //   if (type === 'file' && file) fd.append('document', file)
+  //   else fd.append('text', text)
+
+  //   try {
+  //     const res = await fetch('/api/run-pipeline', {
+  //       method: 'POST',
+  //       headers: { Authorization: `Bearer ${token}` },
+  //       body: fd,
+  //     })
+  //     if (!res.ok) {
+  //       const d = await res.json().catch(() => ({}))
+  //       throw new Error(d.error || `Server error ${res.status}`)
+  //     }
+  //     const reader  = res.body.getReader()
+  //     const decoder = new TextDecoder()
+  //     while (true) {
+  //       const { done, value } = await reader.read()
+  //       if (done) break
+  //       for (const line of decoder.decode(value).split('\n')) {
+  //         if (!line.startsWith('data: ')) continue
+  //         try { handleEvent(JSON.parse(line.slice(6))) } catch {}
+  //       }
+  //     }
+  //   } catch (err) {
+  //     setErrMsg(err.message)
+  //     setStage('error')
+  //   }
+  // }
+
   const handleStart = async ({ type, text, file, personality }) => {
     setStage('running')
     setLogs([]); setResult(null); setErrMsg('')
@@ -350,23 +387,37 @@ export default function App() {
     else fd.append('text', text)
 
     try {
-      const res = await fetch('/api/run-pipeline', {
+      // AUTO-DETECT: Talk to localhost if testing, otherwise Render
+      const BASE_URL = window.location.hostname === 'localhost' 
+        ? "http://localhost:3001" 
+        : "https://sentinel-factory-1.onrender.com";
+
+      const res = await fetch(`${BASE_URL}/api/run-pipeline`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: fd,
       })
+
       if (!res.ok) {
         const d = await res.json().catch(() => ({}))
         throw new Error(d.error || `Server error ${res.status}`)
       }
+
       const reader  = res.body.getReader()
       const decoder = new TextDecoder()
+
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-        for (const line of decoder.decode(value).split('\n')) {
+        const chunk = decoder.decode(value)
+        for (const line of chunk.split('\n')) {
           if (!line.startsWith('data: ')) continue
-          try { handleEvent(JSON.parse(line.slice(6))) } catch {}
+          try { 
+            const data = JSON.parse(line.slice(6));
+            handleEvent(data);
+          } catch (e) {
+            console.error("SSE Parse Error", e);
+          }
         }
       }
     } catch (err) {
@@ -374,6 +425,8 @@ export default function App() {
       setStage('error')
     }
   }
+
+
 
   const onAuth    = (u, t) => { setUser(u); setToken(t) }
   const onLogout  = () => {

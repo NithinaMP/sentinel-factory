@@ -452,11 +452,33 @@ export default function UploadArea({ onStart, user, token, onLogout, onViewMissi
   // };
 
   // Fix 1: Update fetch to use relative path
+  // const fetchHistory = async () => {
+  //   if (!showHistory) {
+  //     setLoadingH(true);
+  //     try {
+  //       const res = await fetch('/api/missions', { 
+  //         headers: { Authorization: `Bearer ${token}` } 
+  //       });
+  //       const data = await res.json();
+  //       setMissions(Array.isArray(data) ? data : []);
+  //     } catch (e) {
+  //       console.error(e);
+  //       setMissions([]);
+  //     }
+  //     setLoadingH(false);
+  //   }
+  //   setHistory(h => !h);
+  // };
+
   const fetchHistory = async () => {
     if (!showHistory) {
       setLoadingH(true);
       try {
-        const res = await fetch('/api/missions', { 
+        const BASE_URL = window.location.hostname === 'localhost' 
+          ? "http://localhost:3001" 
+          : "https://sentinel-factory-1.onrender.com";
+
+        const res = await fetch(`${BASE_URL}/api/missions`, { 
           headers: { Authorization: `Bearer ${token}` } 
         });
         const data = await res.json();
