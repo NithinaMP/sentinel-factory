@@ -387,6 +387,10 @@
 
 
 
+
+//this is the best
+
+
 import { useState, useRef } from 'react';
 
 const PERSONAS = [
@@ -429,6 +433,25 @@ export default function UploadArea({ onStart, user, token, onLogout, onViewMissi
 
   const canStart = (mode === 'text' && text.trim().length > 40) || (mode === 'file' && file);
 
+  // const fetchHistory = async () => {
+  //   if (!showHistory) {
+  //     setLoadingH(true);
+  //     try {
+  //       const res = await fetch('/api/missions', { 
+  //         headers: { Authorization: `Bearer ${token}` } 
+  //       });
+  //       const data = await res.json();
+  //       setMissions(Array.isArray(data) ? data : []);
+  //     } catch (e) {
+  //       console.error(e);
+  //       setMissions([]);
+  //     }
+  //     setLoadingH(false);
+  //   }
+  //   setHistory(h => !h);
+  // };
+
+  // Fix 1: Update fetch to use relative path
   const fetchHistory = async () => {
     if (!showHistory) {
       setLoadingH(true);
@@ -446,6 +469,20 @@ export default function UploadArea({ onStart, user, token, onLogout, onViewMissi
     }
     setHistory(h => !h);
   };
+
+  // Fix 2: Adjust padding in the return div
+  // Scroll down to the {/* Main Upload Area */} div
+  <div style={{
+    flex: 1,
+    overflowY: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'flex-start', // Fixed alignment
+    padding: '110px 24px 60px',   // Fixed top cut-off
+    position: 'relative',
+    background: '#050a14'
+  }}></div>
 
   const openMission = (id) => {
     onViewMission(id);

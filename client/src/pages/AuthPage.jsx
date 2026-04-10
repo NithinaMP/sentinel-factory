@@ -1,3 +1,6 @@
+
+//this is
+
 import { useState, useEffect } from 'react';
 
 export default function AuthPage({ onAuth }) {
@@ -38,31 +41,62 @@ export default function AuthPage({ onAuth }) {
     return null;
   };
 
+  // const submit = async () => {
+  //   const err = validate();
+  //   if (err) { setError(err); return; }
+
+  //   setError('');
+  //   setLoading(true);
+
+  //   try {
+  //     const res = await fetch(mode === 'login' ? '/api/auth/login' : '/api/auth/register', {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify(
+  //         mode === 'login'
+  //           ? { email: email.trim().toLowerCase(), password }
+  //           : { name: name.trim(), email: email.trim().toLowerCase(), password }
+  //       ),
+  //     });
+
+  //     const data = await res.json();
+  //     if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+
+  //     localStorage.setItem('s_token', data.token);
+  //     localStorage.setItem('s_user', JSON.stringify(data.user));
+  //     onAuth(data.user, data.token);
+
+  //   } catch (e) {
+  //     setError(e.message);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const submit = async () => {
     const err = validate();
     if (err) { setError(err); return; }
-
     setError('');
     setLoading(true);
 
     try {
+      // CHANGE: Use relative path for production deployment
       const res = await fetch(mode === 'login' ? '/api/auth/login' : '/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(
           mode === 'login'
             ? { email: email.trim().toLowerCase(), password }
-            : { name: name.trim(), email: email.trim().toLowerCase(), password }
+            : { username: name.trim(), email: email.trim().toLowerCase(), password }
         ),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+      if (!res.ok) throw new Error(data.error || 'Identity verification failed.');
 
       localStorage.setItem('s_token', data.token);
       localStorage.setItem('s_user', JSON.stringify(data.user));
       onAuth(data.user, data.token);
-
     } catch (e) {
       setError(e.message);
     } finally {

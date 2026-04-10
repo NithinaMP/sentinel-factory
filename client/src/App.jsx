@@ -570,7 +570,7 @@ export default function App() {
                 <div className="font-m" style={{ color: 'var(--text-3)', fontSize: 10, marginTop: 14, lineHeight: 1.9 }}>
                   → Verify OPENROUTER_API_KEY in server/.env<br />
                   → Confirm server is running: node index.js<br />
-                  → Check http://localhost:3001/api/health
+                  → Check https://sentinel-factory.onrender.com/api/health
                 </div>
               </div>
               <button className="btn-primary" style={{ width: 'auto', padding: '12px 32px' }} onClick={reset}>↺ Retry Mission</button>

@@ -778,19 +778,40 @@ app.post("/api/run-pipeline", authMiddleware, upload.single("document"), async (
   }
 });
 
-// ── 8. SYSTEM IGNITION ──
+// // ── 8. SYSTEM IGNITION ──
+// const PORT = process.env.PORT || 3001;
+// async function start() {
+//   try {
+//     await initDB();
+//     console.log("✓ SENTINEL VAULT: Synchronization Complete.");
+//   } catch (dbErr) {
+//     console.warn("⚠ VAULT OFFLINE: Pipeline in Stateless Mode.");
+//   }
+
+//   app.listen(PORT, () => {
+//     console.log(`\n🏛️  SENTINEL FACTORY v2.0 ONLINE`);
+//     console.log(`📡 URL: http://localhost:${PORT}`);
+//     console.log(`🔐 AUTH: JWT ENABLED | DB: MYSQL\n`);
+//   });
+// }
+
+// start();
+
+// --- 8. SYSTEM IGNITION ---
 const PORT = process.env.PORT || 3001;
 async function start() {
   try {
-    await initDB();
+    // Railway uses these specific env names for its MySQL plugin
+    await initDB(); 
     console.log("✓ SENTINEL VAULT: Synchronization Complete.");
   } catch (dbErr) {
-    console.warn("⚠ VAULT OFFLINE: Pipeline in Stateless Mode.");
+    console.warn("⚠ VAULT OFFLINE: Running in Stateless Mode.");
   }
 
-  app.listen(PORT, () => {
+  // CRITICAL: Must bind to 0.0.0.0 for Railway/Cloud deployment
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`\n🏛️  SENTINEL FACTORY v2.0 ONLINE`);
-    console.log(`📡 URL: http://localhost:${PORT}`);
+    console.log(`📡 URL: http://0.0.0.0:${PORT}`);
     console.log(`🔐 AUTH: JWT ENABLED | DB: MYSQL\n`);
   });
 }
